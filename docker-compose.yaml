@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: modex_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-modex_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-modex_password}
+      POSTGRES_DB: ${DB_NAME:-modex_db}
+    ports:
+      - "5432:5432"                    # Expose DB to host so local Node can use it
+    volumes:
+      - modex_pg_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  api:
+    build: .
+    container_name: modex_api
+    restart: unless-stopped
+    env_file:
+      - .env                            # Loads your local env vars
+    environment:
+      DB_HOST: postgres                 # 🔴 Override for container: talk to postgres service
+      PORT: 4000                        # 🔴 API in container listens on 4000
+      NODE_ENV: production
+    depends_on:
+      - postgres
+    ports:
+      - "4000:4000"                     # API available at http://localhost:4000
+
+volumes:
+  modex_pg_data:
