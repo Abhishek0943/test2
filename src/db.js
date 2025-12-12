@@ -2,21 +2,19 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// In your Render + Aiven setup, we ALWAYS use DATABASE_URL
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is not set');
-}
+const useUrl = !!process.env.DATABASE_URL;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  // 👇 This is the important part for self-signed certs
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
-
-console.log('Using DATABASE_URL with SSL (rejectUnauthorized: false)');
-
+const pool = new Pool(
+  useUrl=  {
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 5432,
+        user: process.env.DB_USER || 'modex_user',
+        database: process.env.DB_NAME || 'modex_db',
+      }
+);
+pool.on("connect", ()=>{
+  console.log("success")
+})
 pool.on('error', (err) => {
   console.error('Unexpected error on idle Postgres client', err);
   process.exit(1);
